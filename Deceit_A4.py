@@ -6,21 +6,25 @@
 #        \/                 \/     \/
 #
 ##room designs [3/10]
-##room_0-st ei saa tagasi liikuda
+##room_0-st ei saa tagasi liikuda, room_1-st ka
 ##ammo pilt sobivaks [eraldi vedelevad padrunid]
 ##Mingi glitch kui lased vasaku seina vastus olles [kustutab objekti enne kui j6uab listi bullets lisada?]
 ##EDIT: nyyd ei crashi...
 ##Lisa dekoratiivsed objektid
 ##Kui 6 teipi korjatud muuda taust
+##HELITUGEVUSED!
 ##Lisa 9_corrupted.wav
 ##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
 ##Muuda spawn_chance 6igeks
 ##vt kas saad panna reseti staffi mingisse funkziooni
 ##Muuda suuremad pildid 1x zoomi peale ja siis joonista kahekordselt [eg taust, menyy]
+##Lisa controls screen
 ##Press <SPACE> restart sama tekstiga naq on menyy staff
 ##v6ta WaterTop spawn_trapist 2ra, pane mingi muu asi asemele
 ##Heliefektid laskmisele ja relva laadimisele
 ##Muuda trapid yheks objektiks, lihtsalt erineva pildiga
+##pane pildid normaalsesse kausta [data/sprites]
+##level 50 ei salvesta end esimesel korrals
 
 import os;
 import random;
@@ -453,9 +457,10 @@ for i in range(100):
     levellist.append(random.randint(0,9))
     
 tapeaudio = {1:FLD_SND+"1_projection.wav",2:FLD_SND+"2_exterminators.wav",3:FLD_SND+"3_infection.wav",
-             4:FLD_SND+"TEMP_initiation_tape_a.wav",5:FLD_SND+"TEMP_reality_b.wav"}
+             4:FLD_SND+"4_altered_reality.wav",5:FLD_SND+"5_mind_realm.wav",6:FLD_SND+"6_extinction.wav",
+             7:FLD_SND+"7_impact.wav",8:FLD_SND+"8_eradication.wav"}
 
-tapelist = [1,2,3,4,5]
+tapelist = [1,2,3,4,5,6,7,8]
 random.shuffle(tapelist)
 
 pygame.mixer.music.load(FLD_SND+"music.mp3")
