@@ -24,7 +24,11 @@
 ##Heliefektid laskmisele ja relva laadimisele
 ##Muuda trapid yheks objektiks, lihtsalt erineva pildiga
 ##pane pildid normaalsesse kausta [data/sprites]
-##level 50 ei salvesta end esimesel korrals
+##level 50 ei salvesta end esimesel korral [mingi case esimese elemendi tabelisse salvestamisel: trap ja enemy salvestatud enemy tyybi j2rgi [WaterTop((32,224),1)]]
+##puython vist loeb need samadeks hulkadeks st kui k6ik on tyhjad siis enemytable==loottable==traptable ?
+##Lahendus pane erinevad algv22rtused tabelitele[eg mingi pseudo number naq 101] mida kunagi ei laeta
+##1x1 gapi ei saa sisse hypata
+##lvl0->lvl99 lvl99->lvl0
 
 import os;
 import random;
@@ -65,10 +69,14 @@ def load_level(num,d):
     TOTAL_HEIGHT = 0
     x = y = 0
     print("____________\nloading room layout from: data/rooms/room"+str(num)+".txt"+"\nposition in list: "+str(curlev))
+    print(traptable)
+    print(enemytable)
+    print(loottable)
     f=open(FLD_ROOM+"room"+str(num)+".txt")
     try:
         for i in traptable[curlev]:
             eval(i)
+            print(i)
             print("loaded entry: "+i+" from table: traptable, location "+str(curlev))
         for i in loottable[curlev]:
             eval(i)
@@ -444,9 +452,9 @@ player = Player((32,32))
 curlev = 50;
 explosion = None
 
-loottable = {0:[]}
-traptable = {0:[]}
-enemytable = {0:[]}
+loottable = {101:["loot"]}
+traptable = {101:["trap"]}
+enemytable = {101:["enemy"]}
 
 ammo = random.randint(3,7)
 loadedammo = random.randint(2,6)
@@ -661,6 +669,7 @@ while running:
                 player.maxspeed = 1
             curlev += e.s
             load_level(levellist[curlev],e.s)
+            
     for ns in non_solids:
         screen.blit(ns.image,cam.shift(ns))
     for l in loot:
