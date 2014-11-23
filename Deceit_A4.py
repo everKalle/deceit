@@ -7,7 +7,6 @@
 #
 ##room designs [3/10]
 ##room_0-st ei saa tagasi liikuda, room_1-st ka
-##ammo pilt sobivaks [eraldi vedelevad padrunid]
 ##Mingi glitch kui lased vasaku seina vastus olles [kustutab objekti enne kui j6uab listi bullets lisada?]
 ##EDIT: nyyd ei crashi...
 ##Lisa dekoratiivsed objektid
@@ -20,24 +19,24 @@
 ##Muuda suuremad pildid 1x zoomi peale ja siis joonista kahekordselt [eg taust, menyy]
 ##Lisa controls screen
 ##Press <SPACE> restart sama tekstiga naq on menyy staff
-##v6ta WaterTop spawn_trapist 2ra, pane mingi muu asi asemele
-##Heliefektid laskmisele ja relva laadimisele
 ##Muuda trapid yheks objektiks, lihtsalt erineva pildiga
-##pane pildid normaalsesse kausta [data/sprites]
-##level 50 ei salvesta end esimesel korral [mingi case esimese elemendi tabelisse salvestamisel: trap ja enemy salvestatud enemy tyybi j2rgi [WaterTop((32,224),1)]]
-##puython vist loeb need samadeks hulkadeks st kui k6ik on tyhjad siis enemytable==loottable==traptable ?
-##Lahendus pane erinevad algv22rtused tabelitele[eg mingi pseudo number naq 101] mida kunagi ei laeta
 ##1x1 gapi ei saa sisse hypata
 ##lvl0->lvl99 lvl99->lvl0
 
 import os;
 import random;
 import pygame;
+from math import sqrt
 
 def sign(x):
     if x==0:
         return 0
     return(x/abs(x))
+    
+def point_distance(x1,y1,x2,y2):
+    l1=abs(x2-x1);
+    l2=abs(y2-y1);
+    return(sqrt(l1**2+l2**2))    
     
 def table_add_entry(table,name,xcoord,ycoord,scale=1):
     if table==enemytable:
@@ -141,10 +140,7 @@ def load_level(num,d):
                         table_add_entry(traptable,"Wall",x,y)
                     elif (rnum<50):
                         Spike((x,y))
-                        table_add_entry(traptable,"Spike",x,y)
-                    elif (rnum<75):
-                        WaterTop((x,y))
-                        table_add_entry(traptable,"WaterTop",x,y)                        
+                        table_add_entry(traptable,"Spike",x,y)                       
             x += 32
             if TOTAL_HEIGHT==0:
                 TOTAL_WIDTH += 32
@@ -272,6 +268,7 @@ class Hand(pygame.sprite.Sprite):
         animated_spriteobject(self,["revolver1","revolver2","revolver3"],pos,0)
         self.openimage=pygame.image.load(FLD_SPR+"revolver_open.bmp")
         self.openimage.set_colorkey((0,128,0))
+        self.gunsound = pygame.mixer.Sound(FLD_SND+"shoot.wav")
         if (player.image_xscale==-1):
             self.image = pygame.transform.flip(self.image, 1, 0)
 
@@ -290,6 +287,7 @@ class Hand(pygame.sprite.Sprite):
     def shoot(self):
         global loadedammo
         if loadedammo>0 and self.image_speed==0:
+            pygame.mixer.Channel(1).play(self.gunsound)
             Bullet((player.rect.x-8,player.rect.y+14),player.image_xscale*8)
             loadedammo -= 1
             self.image_speed=6
@@ -316,7 +314,7 @@ class Ammunition(pygame.sprite.Sprite):
     
     def __init__(self, pos):
         loot.append(self);
-        spriteobject(self,"gun",pos)
+        spriteobject(self,"ammo",pos)
         
     def pickup(self):
         global ammo
@@ -422,7 +420,7 @@ pygame.display.set_caption("DECEIT")
 screen = pygame.display.set_mode((640, 480))
 
 TAPE_END = pygame.USEREVENT + 1
-FLD_SPR = "data/"
+FLD_SPR = "data/sprites/"
 FLD_SND = "data/sound/"
 FLD_ROOM = "data/rooms/"
 
@@ -430,6 +428,10 @@ pygame.mixer.Channel(0).set_endevent(TAPE_END)
 
 hud_ammo_image = pygame.image.load(FLD_SPR+"hud_bullet.bmp").convert()
 hud_ammo_image.set_colorkey((0,128,0))
+
+snd_load = pygame.mixer.Sound(FLD_SND+"load_cartridge.wav")
+snd_open = pygame.mixer.Sound(FLD_SND+"cylinder_open.wav")
+snd_close = pygame.mixer.Sound(FLD_SND+"cylinder_close.wav")
 
 cylinderimage = []
 for i in range(7):
@@ -535,11 +537,16 @@ while running:
                             player.maxspeed = 2
                 if e.key == pygame.K_x:
                     if ammo>0 and loadedammo<6 and draw_gui:
+                        pygame.mixer.Channel(1).play(snd_load)
                         ammo -= 1
                         loadedammo += 1
                 if e.key == pygame.K_v:
                     if not hand==None and hand.image_speed==0:
                         draw_gui = not draw_gui
+                        if draw_gui:
+                            pygame.mixer.Channel(1).play(snd_open)
+                        else:
+                            pygame.mixer.Channel(1).play(snd_close)
                 
         if e.type == TAPE_END:
             if len(tapequeue)>0:
