@@ -7,21 +7,19 @@
 #
 ##room designs [3/10]
 ##room_0-st ei saa tagasi liikuda, room_1-st ka
-##Mingi glitch kui lased vasaku seina vastus olles [kustutab objekti enne kui j6uab listi bullets lisada?]
-##EDIT: nyyd ei crashi...
-##Lisa dekoratiivsed objektid
-##Kui 6 teipi korjatud muuda taust
+##leiutada mingid teleporterid?
 ##HELITUGEVUSED!
 ##Lisa 9_corrupted.wav
 ##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
 ##Muuda spawn_chance 6igeks
 ##vt kas saad panna reseti staffi mingisse funkziooni
-##Muuda suuremad pildid 1x zoomi peale ja siis joonista kahekordselt [eg taust, menyy]
-##Lisa controls screen
-##Press <SPACE> restart sama tekstiga naq on menyy staff
-##Muuda trapid yheks objektiks, lihtsalt erineva pildiga
 ##1x1 gapi ei saa sisse hypata
 ##lvl0->lvl99 lvl99->lvl0
+##[space] - shoot on controls screenilt puudu
+##
+##turret on OP
+##vb kontrollida kas player.y ja turret.y vahe on abs v2iksem mingi 16-st v6i nii, siis ei lase nii lambist ehk
+##kuuli v6ib ka aeglasemaks teha
 
 import os;
 import random;
@@ -121,7 +119,8 @@ def load_level(num,d):
                 Badfloor((x,y))
             elif col=="E":
                 if not generated:   ##random VA?
-                    Walker((x, y),1)
+                    #Walker((x, y),1)
+                    Turret((x,y),1)
             elif col=="r":
                 EnemyBlocker((x, y))
             elif col=="S":
@@ -140,7 +139,19 @@ def load_level(num,d):
                         table_add_entry(traptable,"Wall",x,y)
                     elif (rnum<50):
                         Spike((x,y))
-                        table_add_entry(traptable,"Spike",x,y)                       
+                        table_add_entry(traptable,"Spike",x,y)      
+            elif col=="D":
+                if not generated:
+                    rnum=random.randint(0,100)
+                    if (rnum<25):
+                        DecCross((x,y))
+                        table_add_entry(traptable,"DecCross",x,y)
+                    elif (rnum<50):
+                        DecGrass((x,y))
+                        table_add_entry(traptable,"DecGrass",x,y)      
+                    elif (rnum<75):
+                        DecFence((x,y))
+                        table_add_entry(traptable,"DecFence",x,y)               
             x += 32
             if TOTAL_HEIGHT==0:
                 TOTAL_WIDTH += 32
@@ -310,6 +321,24 @@ class WaterTop(pygame.sprite.Sprite):
         traps.append(self);
         spriteobject(self,"water_top",pos)
         
+class DecCross(pygame.sprite.Sprite):
+    
+    def __init__(self, pos):
+        non_solids.append(self)
+        spriteobject(self,"cross",pos)
+
+class DecGrass(pygame.sprite.Sprite):
+    
+    def __init__(self, pos):
+        non_solids.append(self)
+        spriteobject(self,"grass",pos)
+        
+class DecFence(pygame.sprite.Sprite):
+    
+    def __init__(self, pos):
+        non_solids.append(self)
+        spriteobject(self,"fence",pos)
+        
 class Ammunition(pygame.sprite.Sprite):
     
     def __init__(self, pos):
@@ -335,16 +364,17 @@ class TriggerAudio(pygame.sprite.Sprite):
         self.rect.y = pos[1]
         
     def pickup(self):
-        if pygame.mixer.Channel(0).get_busy()==0:
-            self.tape = pygame.mixer.Sound(tapeaudio[tapelist[0]])
-            pygame.mixer.Channel(0).play(self.tape)
-            print("playing audio from: "+tapeaudio[tapelist[0]])
-        else:
-            tapequeue.append(tapeaudio[tapelist[0]])
-            print("adding audio from: "+tapeaudio[tapelist[0]]+" to the queue")
-        tapelist.remove(tapelist[0])
-        table_remove_entry(loottable,"TriggerAudio",self.rect.x,self.rect.y)
-        loot.remove(self)
+        if len(tapelist)>0:
+            if pygame.mixer.Channel(0).get_busy()==0:
+                self.tape = pygame.mixer.Sound(tapeaudio[tapelist[0]])
+                pygame.mixer.Channel(0).play(self.tape)
+                print("playing audio from: "+tapeaudio[tapelist[0]])
+            else:
+                tapequeue.append(tapeaudio[tapelist[0]])
+                print("adding audio from: "+tapeaudio[tapelist[0]]+" to the queue")
+            tapelist.remove(tapelist[0])
+            table_remove_entry(loottable,"TriggerAudio",self.rect.x,self.rect.y)
+            loot.remove(self)
         
 class Spike(pygame.sprite.Sprite):
     
@@ -389,6 +419,38 @@ class Walker(pygame.sprite.Sprite):
         self.image_xscale *= -1
         self.image = pygame.transform.flip(self.image, 1, 0)
         
+class Turret(pygame.sprite.Sprite):
+    
+    def __init__(self,pos,xscale):
+        exterminators.append(self)
+        self.name = "Turret"
+        spriteobject(self,"ext_turret",pos)
+        self.shootdelay = 0
+        self.image_xscale = xscale
+        self.hp = 1
+        
+    def update(self):
+        if self.shootdelay>0:
+            self.shootdelay-=1
+        else:
+            if point_distance(self.rect.x,self.rect.y,player.rect.x,player.rect.y)<128:
+                EnemyBullet((self.rect.x+12,self.rect.y+14),8)
+                EnemyBullet((self.rect.x+12,self.rect.y+14),-8)
+                self.shootdelay=30
+        
+class EnemyBullet(pygame.sprite.Sprite):
+    
+    def __init__(self, pos, hspeed):
+        enemybullets.append(self)
+        spriteobject(self,"enemybullet",pos)
+        self.hspeed = hspeed
+
+    def update(self):
+        self.rect.x += self.hspeed
+        for wall in walls:
+            if (self.rect.colliderect(wall)):
+                enemybullets.remove(self)
+        
 class EnemyBlocker(pygame.rect.Rect):
     
     def __init__(self,pos):
@@ -429,6 +491,9 @@ pygame.mixer.Channel(0).set_endevent(TAPE_END)
 hud_ammo_image = pygame.image.load(FLD_SPR+"hud_bullet.bmp").convert()
 hud_ammo_image.set_colorkey((0,128,0))
 
+restartimage = pygame.image.load(FLD_SPR+"restartimage.bmp").convert()
+restartimage.set_colorkey((0,128,0))
+
 snd_load = pygame.mixer.Sound(FLD_SND+"load_cartridge.wav")
 snd_open = pygame.mixer.Sound(FLD_SND+"cylinder_open.wav")
 snd_close = pygame.mixer.Sound(FLD_SND+"cylinder_close.wav")
@@ -448,6 +513,7 @@ exterminators = []
 exits = []
 loot = []
 bullets = []
+enemybullets = []
 non_solids = []
 hand = None
 player = Player((32,32))
@@ -473,6 +539,8 @@ tapeaudio = {1:FLD_SND+"1_projection.wav",2:FLD_SND+"2_exterminators.wav",3:FLD_
 tapelist = [1,2,3,4,5,6,7,8]
 random.shuffle(tapelist)
 
+tapes_listened = 0
+
 pygame.mixer.music.load(FLD_SND+"music.mp3")
 pygame.mixer.music.play(-1)
 
@@ -485,7 +553,16 @@ finished = False      #L6petatud
 load_level(levellist[curlev],1)
 
 #menyy
-images_menu=[pygame.image.load(FLD_SPR+"menu.bmp"),pygame.image.load(FLD_SPR+"bg1.bmp")]
+images_menu=[pygame.image.load(FLD_SPR+"menu.bmp"),pygame.image.load(FLD_SPR+"menu_controls.bmp")]
+images_menu[0]=pygame.transform.scale(images_menu[0],(640,480))
+images_menu[1]=pygame.transform.scale(images_menu[1],(640,480))
+
+bgimage = pygame.image.load(FLD_SPR+"bg1.bmp")
+bgimage = pygame.transform.scale(bgimage,(640,480))
+
+bgimage2 = pygame.image.load(FLD_SPR+"bg2.bmp")
+bgimage2 = pygame.transform.scale(bgimage2,(640,480))
+
 menuimage=0
 showmenu=True
 running = True
@@ -560,6 +637,7 @@ while running:
                 if len(tapelist)==0:
                     finished = True;
                 print("tape playback ended")
+            tapes_listened += 1
                 
     #Klahvi all hoidmine
 
@@ -591,6 +669,7 @@ while running:
             exits = []
             loot = []
             bullets = []
+            enemybullets = []
             non_solids = []
             hand = None
             explosion = None
@@ -610,16 +689,18 @@ while running:
             random.shuffle(tapelist)
             
             tapequeue = []
+            tapes_listened = 0
             dead = False
             ammo = random.randint(3,7)
             loadedammo = random.randint(2,6)
             draw_gui=False
             
             load_level(levellist[curlev],1)
-
-    background = pygame.image.load(FLD_SPR+"bg1.bmp")
-    backgroundRect = background.get_rect()
-    screen.blit(background, backgroundRect)
+    
+    if tapes_listened<6:
+        screen.blit(bgimage, (0,0))
+    else:
+        screen.blit(bgimage2, (0,0))
     
     if (len(bullets)>0):
         for b in bullets:
@@ -635,6 +716,10 @@ while running:
                         exterminators.remove(e)
                     bullets.remove(b)
             screen.blit(b.image,cam.shift(b))
+            
+    for b in enemybullets:
+        b.update()
+        screen.blit(b.image,cam.shift(b))
     
     if not dead:     
         screen.blit(player.image,cam.shift(player))
@@ -670,6 +755,7 @@ while running:
             exits = []
             loot = []
             bullets = []
+            enemybullets = []
             non_solids = []
             player = Player((0,-32))
             if not hand==None:
@@ -706,15 +792,8 @@ while running:
         background = background.convert()
         background.fill((0, 0, 0))
         background.set_alpha(160)
-        if pygame.font:
-            font = pygame.font.Font(None, 40)
-            text = font.render("You have died", 1, (255, 255, 255))
-            textpos = text.get_rect(center=(background.get_width()/2,220))
-            background.blit(text, textpos)
-            text = font.render("<SPACE> to restart", 1, (255, 255, 255))
-            textpos = text.get_rect(center=(background.get_width()/2,260))
-            background.blit(text, textpos)
         screen.blit(background, (0, 0))
+        screen.blit(restartimage,(86,380))
         
     pygame.display.flip()
 
