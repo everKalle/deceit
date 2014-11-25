@@ -7,34 +7,33 @@
 #
 ##room designs [3/10]
 ##room_0-st ei saa tagasi liikuda, room_1-st ka
-##leiutada mingid teleporterid?
+##pane room0 ja room1 teleporterid
+##lisa levelbuilderisse dec ja telep objektid
+##VA spawnimine 6igeks
+##+1 VA
 ##HELITUGEVUSED!
-##Lisa 9_corrupted.wav
+##Lisa 9_corrupted.wav'
+##v6ta heliefektide algusest see 0.1 sec delay 2ra
 ##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
 ##Muuda spawn_chance 6igeks
 ##vt kas saad panna reseti staffi mingisse funkziooni
 ##1x1 gapi ei saa sisse hypata
+##workaround: 2ra pane yhtegi sellist kohta
 ##lvl0->lvl99 lvl99->lvl0
 ##[space] - shoot on controls screenilt puudu
 ##
 ##turret on OP
-##vb kontrollida kas player.y ja turret.y vahe on abs v2iksem mingi 16-st v6i nii, siis ei lase nii lambist ehk
-##kuuli v6ib ka aeglasemaks teha
+##EDIT nyyd on veits underpowered
+##m2ngi noticedelay-ga [27+ on palju], [20 on natuke ebaaus]
 
 import os;
 import random;
 import pygame;
-from math import sqrt
 
 def sign(x):
     if x==0:
         return 0
-    return(x/abs(x))
-    
-def point_distance(x1,y1,x2,y2):
-    l1=abs(x2-x1);
-    l2=abs(y2-y1);
-    return(sqrt(l1**2+l2**2))    
+    return(x/abs(x))  
     
 def table_add_entry(table,name,xcoord,ycoord,scale=1):
     if table==enemytable:
@@ -151,7 +150,11 @@ def load_level(num,d):
                         table_add_entry(traptable,"DecGrass",x,y)      
                     elif (rnum<75):
                         DecFence((x,y))
-                        table_add_entry(traptable,"DecFence",x,y)               
+                        table_add_entry(traptable,"DecFence",x,y)   
+            elif col=="V":
+                TeleporterEntrance((x,y))
+            elif col=="v":
+                TeleporterExit((x,y))
             x += 32
             if TOTAL_HEIGHT==0:
                 TOTAL_WIDTH += 32
@@ -426,6 +429,7 @@ class Turret(pygame.sprite.Sprite):
         self.name = "Turret"
         spriteobject(self,"ext_turret",pos)
         self.shootdelay = 0
+        self.noticedelay = 0
         self.image_xscale = xscale
         self.hp = 1
         
@@ -433,10 +437,16 @@ class Turret(pygame.sprite.Sprite):
         if self.shootdelay>0:
             self.shootdelay-=1
         else:
-            if point_distance(self.rect.x,self.rect.y,player.rect.x,player.rect.y)<128:
-                EnemyBullet((self.rect.x+12,self.rect.y+14),8)
-                EnemyBullet((self.rect.x+12,self.rect.y+14),-8)
-                self.shootdelay=30
+            if abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<128:
+                if self.noticedelay<24:
+                    self.noticedelay += 1
+                else:
+                    EnemyBullet((self.rect.x+12,self.rect.y+14),8)
+                    EnemyBullet((self.rect.x+12,self.rect.y+14),-8)
+                    self.shootdelay=30
+            else:
+                if self.noticedelay>0:
+                    self.noticedelay -= 1
         
 class EnemyBullet(pygame.sprite.Sprite):
     
@@ -450,6 +460,18 @@ class EnemyBullet(pygame.sprite.Sprite):
         for wall in walls:
             if (self.rect.colliderect(wall)):
                 enemybullets.remove(self)
+                
+class TeleporterEntrance(pygame.sprite.Sprite):
+    
+    def __init__(self,pos):
+        teleporters["entrance"] = self
+        spriteobject(self,"teleporter",pos)
+        
+class TeleporterExit(pygame.sprite.Sprite):
+    
+    def __init__(self,pos):
+        teleporters["exit"] = self
+        spriteobject(self,"teleporter_exit",pos)
         
 class EnemyBlocker(pygame.rect.Rect):
     
@@ -472,6 +494,17 @@ class PlayerExplode(pygame.sprite.Sprite):
         global explosion
         image_animate(self)
         if self.image_index>192:
+            explosion = None
+
+class TeleAnim(pygame.sprite.Sprite):
+    
+    def __init__(self,pos):
+        animated_spriteobject(self,["teleanim0","teleanim1","teleanim2"],pos,3)
+    
+    def update(self):
+        global explosion
+        image_animate(self)
+        if self.image_index>82:
             explosion = None
         
 
@@ -515,6 +548,7 @@ loot = []
 bullets = []
 enemybullets = []
 non_solids = []
+teleporters = {}
 hand = None
 player = Player((32,32))
 curlev = 50;
@@ -671,6 +705,7 @@ while running:
             bullets = []
             enemybullets = []
             non_solids = []
+            teleporters = {}
             hand = None
             explosion = None
             player = Player((32,32))
@@ -757,6 +792,7 @@ while running:
             bullets = []
             enemybullets = []
             non_solids = []
+            teleporters = {}
             player = Player((0,-32))
             if not hand==None:
                 player.maxspeed = 1
@@ -765,6 +801,13 @@ while running:
             
     for ns in non_solids:
         screen.blit(ns.image,cam.shift(ns))
+    if not teleporters == {}:
+        screen.blit(teleporters["entrance"].image,cam.shift(teleporters["entrance"]))
+        screen.blit(teleporters["exit"].image,cam.shift(teleporters["exit"]))
+        if teleporters["entrance"].rect.colliderect(player):
+            explosion = TeleAnim((player.rect.x-4,player.rect.y))
+            player.rect.x=teleporters["exit"].rect.x
+            player.rect.y=teleporters["exit"].rect.y
     for l in loot:
         screen.blit(l.image,cam.shift(l))
         if l.rect.colliderect(player):
