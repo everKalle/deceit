@@ -1,15 +1,15 @@
-WWWWWWWWWWWWWWWWWWWW                    
-W                  W                    
-W       W W        W                    
-W       W W        W                    
-W       WWW        W                    
-W         W        W                    
-W         W        W                    
-WTTTT          IIIIW                    
-WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-W                                      W
-W                                      W
-W                                      W
-WB                                   F W
-W   S                              s   W
-WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWW              WWWWWWWWWWWWWWWW
+WW     WW                WW        WWWWW
+WB     W                 W           WWW
+W   S       D            W            WW
+WWWW     DWWWWr E r  I       T       F W
+WWWWWD   WWWWWWWWW!!WWW     WWWW   s   W
+WWWWWW       WWWWWWWWWWI   WWWWWW  WWWWW
+WWWWWW         WWWWWWWWWW  WWW     WW  W
+WWWWWW     I     WWWWWWW   W      WW   W
+W   WW    WWTT   WWWWWW                W
+WI        WWWW    WW            DWW   IW
+WW         WWWW      r  E  r    WWWW__WW
+WWr E r      WW       WWWWW    WWWWWTTWW
+WWWWWWr    E       rWWWWWWWWW!WWWWWWWWWW
+WWWWWWWWWWWWWWWWaaWWWWWWWWWWWWWWWWWWWWWW

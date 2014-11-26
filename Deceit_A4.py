@@ -5,26 +5,16 @@
 #\____|__  /\____/|__|  \___  >____  >
 #        \/                 \/     \/
 #
-##room designs [3/10]
-##room_0-st ei saa tagasi liikuda, room_1-st ka
-##pane room0 ja room1 teleporterid
-##lisa levelbuilderisse dec ja telep objektid
+##room designs [4/10]
 ##VA spawnimine 6igeks
 ##+1 VA
 ##HELITUGEVUSED!
 ##Lisa 9_corrupted.wav'
-##v6ta heliefektide algusest see 0.1 sec delay 2ra
+##ikka on mingi delay sees helidel, vb peab kvali madalamaks t6mbama
 ##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
 ##Muuda spawn_chance 6igeks
 ##vt kas saad panna reseti staffi mingisse funkziooni
-##1x1 gapi ei saa sisse hypata
-##workaround: 2ra pane yhtegi sellist kohta
-##lvl0->lvl99 lvl99->lvl0
-##[space] - shoot on controls screenilt puudu
-##
-##turret on OP
-##EDIT nyyd on veits underpowered
-##m2ngi noticedelay-ga [27+ on palju], [20 on natuke ebaaus]
+##Lisa ylej22nud valmisjoonistatud mant
 
 import os;
 import random;
@@ -105,7 +95,7 @@ def load_level(num,d):
                     if rnum<25:
                         Ammunition((x,y));
                         table_add_entry(loottable,"Ammunition",x,y)
-                    elif rnum<95:           ##VAHETA 2RA!
+                    elif rnum<40:           ##VAHETA 2RA!
                         TriggerAudio((x,y));
                         table_add_entry(loottable,"TriggerAudio",x,y)
             elif col=="a":
@@ -139,6 +129,9 @@ def load_level(num,d):
                     elif (rnum<50):
                         Spike((x,y))
                         table_add_entry(traptable,"Spike",x,y)      
+                    elif (rnum<75):
+                        HiddenSpike((x+4,y+28))
+                        table_add_entry(traptable,"HiddenSpike",x+4,y+28)  
             elif col=="D":
                 if not generated:
                     rnum=random.randint(0,100)
@@ -384,6 +377,20 @@ class Spike(pygame.sprite.Sprite):
     def __init__(self, pos):
         traps.append(self);
         spriteobject(self,"spikes",pos)
+        
+class HiddenSpike(pygame.sprite.Sprite):
+    
+    def __init__(self, pos):
+        hiddentraps.append(self);
+        spriteobject(self,"spike_hidden",pos)
+        self.hidden = True
+    
+    def show(self):
+        if self.hidden:
+            self.image = pygame.image.load(FLD_SPR+"spike_shown.bmp").convert()
+            self.image.set_colorkey((0,128,0))
+            self.rect.y -= 28
+            self.hidden = False
 
 class Exit(pygame.sprite.Sprite):
     
@@ -437,7 +444,7 @@ class Turret(pygame.sprite.Sprite):
         if self.shootdelay>0:
             self.shootdelay-=1
         else:
-            if abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<128:
+            if abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<256:
                 if self.noticedelay<24:
                     self.noticedelay += 1
                 else:
@@ -541,6 +548,7 @@ clock = pygame.time.Clock()
         
 walls = []
 traps = []
+hiddentraps = []
 blockers = []
 exterminators = []
 exits = []
@@ -698,6 +706,7 @@ while running:
         if (dead):
             walls = []
             traps = []
+            hiddentraps = []
             blockers = []
             exterminators = []
             exits = []
@@ -755,6 +764,9 @@ while running:
     for b in enemybullets:
         b.update()
         screen.blit(b.image,cam.shift(b))
+        if b.rect.colliderect(player) and not dead:
+            explosion = PlayerExplode((player.rect.x-32,player.rect.y-32))
+            dead = True
     
     if not dead:     
         screen.blit(player.image,cam.shift(player))
@@ -762,9 +774,9 @@ while running:
         hand.update()
         if draw_gui:
             if player.image_xscale==1:
-                openimg=hand.openimage
+                openimg = hand.openimage
             else:
-                openimg=pygame.transform.flip(hand.openimage, 1, 0)
+                openimg = pygame.transform.flip(hand.openimage, 1, 0)
             screen.blit(openimg,cam.shift(hand))
         else:
             screen.blit(hand.image,cam.shift(hand))
@@ -773,8 +785,14 @@ while running:
     for t in traps:
         screen.blit(t.image,cam.shift(t))
         if t.rect.colliderect(player) and not dead:
-            explosion=PlayerExplode((player.rect.x-32,player.rect.y-32))
+            explosion = PlayerExplode((player.rect.x-32,player.rect.y-32))
             dead = True
+    for t in hiddentraps:
+        screen.blit(t.image,cam.shift(t))
+        if t.rect.colliderect(player) and not dead:
+            explosion = PlayerExplode((player.rect.x-32,player.rect.y-32))
+            dead = True
+            t.show()
     for e in exits:
         screen.blit(e.image,cam.shift(e))
         if (e.rect.colliderect(player)):
@@ -785,6 +803,7 @@ while running:
                 table_add_entry(enemytable,i.name,i.rect.x,i.rect.y,i.image_xscale)
             walls = []
             traps = []
+            hiddentraps = []
             blockers = []
             exterminators = []
             exits = []
@@ -797,6 +816,10 @@ while running:
             if not hand==None:
                 player.maxspeed = 1
             curlev += e.s
+            if curlev>99:
+                curlev = 0
+            elif curlev<0:
+                curlev = 99
             load_level(levellist[curlev],e.s)
             
     for ns in non_solids:
@@ -818,7 +841,7 @@ while running:
             if b.rect.colliderect(e):
                 e.turn_around()
         if e.rect.colliderect(player) and not dead:
-            explosion=PlayerExplode((player.rect.x-32,player.rect.y-32))
+            explosion = PlayerExplode((player.rect.x-32,player.rect.y-32))
             dead = True
         screen.blit(e.image,cam.shift(e))
     
