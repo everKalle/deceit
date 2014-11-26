@@ -7,14 +7,13 @@
 #
 ##room designs [4/10]
 ##VA spawnimine 6igeks
-##+1 VA
 ##HELITUGEVUSED!
 ##Lisa 9_corrupted.wav'
 ##ikka on mingi delay sees helidel, vb peab kvali madalamaks t6mbama
 ##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
 ##Muuda spawn_chance 6igeks
 ##vt kas saad panna reseti staffi mingisse funkziooni
-##Lisa ylej22nud valmisjoonistatud mant
+##
 
 import os;
 import random;
@@ -109,7 +108,8 @@ def load_level(num,d):
             elif col=="E":
                 if not generated:   ##random VA?
                     #Walker((x, y),1)
-                    Turret((x,y),1)
+                    #Turret((x,y),1)
+                    Flyer((x,y),1)
             elif col=="r":
                 EnemyBlocker((x, y))
             elif col=="S":
@@ -428,6 +428,39 @@ class Walker(pygame.sprite.Sprite):
     def turn_around(self):
         self.image_xscale *= -1
         self.image = pygame.transform.flip(self.image, 1, 0)
+
+class Flyer(pygame.sprite.Sprite):
+    
+    def __init__(self,pos,scale):
+        exterminators.append(self)
+        self.name = "Flyer"
+        animated_spriteobject(self,["flyer1","flyer2","flyer3","flyer4"],pos,4)
+        self.image_xscale = scale
+        self.hp = 2
+        self.shootdelay = 0
+        self.noticedelay = 0
+    
+    def update(self):
+        self.rect.x += 2*self.image_xscale
+        image_animate(self)
+        if self.shootdelay>0:
+            self.shootdelay-=1
+        else:
+            if sign(player.rect.x-self.rect.x)==self.image_xscale and abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<196:
+                if self.noticedelay<10:
+                    self.noticedelay += 1
+                else:
+                    i = FlyerBullet((self.rect.x+5,self.rect.y+6),5*self.image_xscale)
+                    if self.image_xscale==-1:
+                        i.image = pygame.transform.flip(i.image, 1, 0)
+                    self.shootdelay=50
+            else:
+                if self.noticedelay>0:
+                    self.noticedelay -= 1
+    
+    def turn_around(self):
+        self.image_xscale *= -1
+        self.image = pygame.transform.flip(self.image, 1, 0)
         
 class Turret(pygame.sprite.Sprite):
     
@@ -460,6 +493,19 @@ class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self, pos, hspeed):
         enemybullets.append(self)
         spriteobject(self,"enemybullet",pos)
+        self.hspeed = hspeed
+
+    def update(self):
+        self.rect.x += self.hspeed
+        for wall in walls:
+            if (self.rect.colliderect(wall)):
+                enemybullets.remove(self)
+                
+class FlyerBullet(pygame.sprite.Sprite):
+    
+    def __init__(self, pos, hspeed):
+        enemybullets.append(self)
+        spriteobject(self,"flyer_bullet",pos)
         self.hspeed = hspeed
 
     def update(self):
