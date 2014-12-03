@@ -6,18 +6,14 @@
 #        \/                 \/     \/
 #
 ##room designs [4/10]
-##VA spawnimine 6igeks
-##HELITUGEVUSED!
-##Lisa 9_corrupted.wav'
-##ikka on mingi delay sees helidel, vb peab kvali madalamaks t6mbama
-##Lisa l6pp, aktiveerub kui k6ik teibid l2bi [mitte kui viimane yles korjata]
-##Muuda spawn_chance 6igeks
-##vt kas saad panna reseti staffi mingisse funkziooni
-##
+##Spawnchance-d
+##HELITUGEVUSED!  ...okei enamv2hem, mingi teip on veits vaiksem (5_...)
+##EDIT mingi krdi lambi hetkedel v2ga harva itemeid korjates crashib nyyd...
 
 import os;
 import random;
 import pygame;
+from math import floor
 
 def sign(x):
     if x==0:
@@ -61,7 +57,6 @@ def load_level(num,d):
     try:
         for i in traptable[curlev]:
             eval(i)
-            print(i)
             print("loaded entry: "+i+" from table: traptable, location "+str(curlev))
         for i in loottable[curlev]:
             eval(i)
@@ -94,7 +89,7 @@ def load_level(num,d):
                     if rnum<25:
                         Ammunition((x,y));
                         table_add_entry(loottable,"Ammunition",x,y)
-                    elif rnum<40:           ##VAHETA 2RA!
+                    elif rnum<90:           ##VAHETA 2RA!
                         TriggerAudio((x,y));
                         table_add_entry(loottable,"TriggerAudio",x,y)
             elif col=="a":
@@ -106,10 +101,14 @@ def load_level(num,d):
             elif col=="_":
                 Badfloor((x,y))
             elif col=="E":
-                if not generated:   ##random VA?
-                    #Walker((x, y),1)
-                    #Turret((x,y),1)
-                    Flyer((x,y),1)
+                if not generated:
+                    rnum = random.randint(0,100)
+                    if rnum<30:
+                        Walker((x, y),1)
+                    elif rnum<60:
+                        Turret((x,y),1)
+                    elif rnum<90:
+                        Flyer((x,y),1)
             elif col=="r":
                 EnemyBlocker((x, y))
             elif col=="S":
@@ -294,7 +293,7 @@ class Hand(pygame.sprite.Sprite):
     def shoot(self):
         global loadedammo
         if loadedammo>0 and self.image_speed==0:
-            pygame.mixer.Channel(1).play(self.gunsound)
+            pygame.mixer.Channel(2).play(self.gunsound)
             Bullet((player.rect.x-8,player.rect.y+14),player.image_xscale*8)
             loadedammo -= 1
             self.image_speed=6
@@ -567,6 +566,8 @@ pygame.init()
 pygame.display.set_caption("DECEIT")
 screen = pygame.display.set_mode((640, 480))
 
+pygame.mixer.init(frequency=22050, size=-16, channels=3, buffer=32)
+
 TAPE_END = pygame.USEREVENT + 1
 FLD_SPR = "data/sprites/"
 FLD_SND = "data/sound/"
@@ -591,6 +592,7 @@ for i in range(7):
     print("loaded cylinder000"+str(i))
     
 clock = pygame.time.Clock()
+imgnum = 1.5
         
 walls = []
 traps = []
@@ -622,9 +624,9 @@ for i in range(100):
     
 tapeaudio = {1:FLD_SND+"1_projection.wav",2:FLD_SND+"2_exterminators.wav",3:FLD_SND+"3_infection.wav",
              4:FLD_SND+"4_altered_reality.wav",5:FLD_SND+"5_mind_realm.wav",6:FLD_SND+"6_extinction.wav",
-             7:FLD_SND+"7_impact.wav",8:FLD_SND+"8_eradication.wav"}
+             7:FLD_SND+"7_impact.wav",8:FLD_SND+"8_eradication.wav",9:FLD_SND+"9_corrupted.wav"}
 
-tapelist = [1,2,3,4,5,6,7,8]
+tapelist = [1,2,3,4,5,6,7,8,9]
 random.shuffle(tapelist)
 
 tapes_listened = 0
@@ -749,7 +751,7 @@ while running:
             player.jump()
             
     if key[pygame.K_SPACE]:
-        if (dead):
+        if (dead or finished):
             walls = []
             traps = []
             hiddentraps = []
@@ -775,12 +777,13 @@ while running:
             for i in range(100):
                 levellist.append(random.randint(0,9))
             
-            tapelist = [1,2,3,4,5]
+            tapelist = [1,2,3,4,5,6,7,8,9]
             random.shuffle(tapelist)
             
             tapequeue = []
             tapes_listened = 0
             dead = False
+            finished = False
             ammo = random.randint(3,7)
             loadedammo = random.randint(2,6)
             draw_gui=False
@@ -814,7 +817,7 @@ while running:
             explosion = PlayerExplode((player.rect.x-32,player.rect.y-32))
             dead = True
     
-    if not dead:     
+    if not (dead or finished):     
         screen.blit(player.image,cam.shift(player))
     if not hand==None:
         hand.update()
@@ -899,13 +902,20 @@ while running:
     if not explosion==None:
         screen.blit(explosion.image,cam.shift(explosion))
         explosion.update()
-    if (dead):
+    if finished:
+        if imgnum<7:
+            imgnum += 0.01
+        endimg = pygame.image.load(FLD_SPR+"ending/e"+str(floor(imgnum))+".bmp")
+        endimg = pygame.transform.scale(endimg,(640,480))
+        screen.blit(endimg, (0, 0))
+    elif (dead):
         background = pygame.Surface(screen.get_size())
         background = background.convert()
         background.fill((0, 0, 0))
         background.set_alpha(160)
         screen.blit(background, (0, 0))
         screen.blit(restartimage,(86,380))
+
         
     pygame.display.flip()
 
