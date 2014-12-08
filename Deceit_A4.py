@@ -5,11 +5,8 @@
 #\____|__  /\____/|__|  \___  >____  >
 #        \/                 \/     \/
 #
-##room designs [4/10]
-##Spawnchance-d
 ##HELITUGEVUSED!  ...okei enamv2hem, mingi teip on veits vaiksem (5_...)
-##EDIT mingi krdi lambi hetkedel v2ga harva itemeid korjates crashib nyyd...
-
+##lisa mingi kuulatud teipide counter?
 import os;
 import random;
 import pygame;
@@ -35,9 +32,15 @@ def table_add_entry(table,name,xcoord,ycoord,scale=1):
         
 def table_remove_entry(table,name,xcoord,ycoord,scale=1):
     if table==enemytable:
-        table[curlev].remove(name+"(("+str(xcoord)+","+str(ycoord)+"),"+str(scale)+")")
+        try:
+            table[curlev].remove(name+"(("+str(xcoord)+","+str(ycoord)+"),"+str(scale)+")")
+        except:
+            print("failed to remove entry: "+name+"(("+str(xcoord)+","+str(ycoord)+"),"+str(scale)+")")
     else:
-        table[curlev].remove(name+"(("+str(xcoord)+","+str(ycoord)+"))")
+        try:
+            table[curlev].remove(name+"(("+str(xcoord)+","+str(ycoord)+"))")
+        except:
+            print("failed to remove entry: "+name+"(("+str(xcoord)+","+str(ycoord)+"))")
     if table==loottable:
         print("removed entry: "+name+"(("+str(xcoord)+","+str(ycoord)+"))"+" from table: loottable, location: "+str(curlev))
     elif table==traptable:
@@ -89,7 +92,7 @@ def load_level(num,d):
                     if rnum<25:
                         Ammunition((x,y));
                         table_add_entry(loottable,"Ammunition",x,y)
-                    elif rnum<90:           ##VAHETA 2RA!
+                    elif rnum<45:           
                         TriggerAudio((x,y));
                         table_add_entry(loottable,"TriggerAudio",x,y)
             elif col=="a":
@@ -103,11 +106,11 @@ def load_level(num,d):
             elif col=="E":
                 if not generated:
                     rnum = random.randint(0,100)
-                    if rnum<30:
+                    if rnum<31:
                         Walker((x, y),1)
-                    elif rnum<60:
+                    elif rnum<61:
                         Turret((x,y),1)
-                    elif rnum<90:
+                    elif rnum<96:
                         Flyer((x,y),1)
             elif col=="r":
                 EnemyBlocker((x, y))
@@ -421,7 +424,7 @@ class Walker(pygame.sprite.Sprite):
         self.hp = 2
     
     def update(self):
-        self.rect.x += 2*self.image_xscale        ###!!! 2 == good difficulty, 1 == better looks [?]
+        self.rect.x += 2*self.image_xscale
         image_animate(self)
     
     def turn_around(self):
@@ -476,8 +479,8 @@ class Turret(pygame.sprite.Sprite):
         if self.shootdelay>0:
             self.shootdelay-=1
         else:
-            if abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<256:
-                if self.noticedelay<24:
+            if abs(self.rect.y-player.rect.y)<10 and abs(self.rect.x-player.rect.x)<312:
+                if self.noticedelay<23:
                     self.noticedelay += 1
                 else:
                     EnemyBullet((self.rect.x+12,self.rect.y+14),8)
@@ -724,7 +727,7 @@ while running:
                 tapequeue.remove(tapequeue[0])
                 print(tapequeue)
             else:
-                if len(tapelist)==0:
+                if len(tapelist)==0 and not dead:
                     finished = True;
                 print("tape playback ended")
             tapes_listened += 1
@@ -768,9 +771,9 @@ while running:
             player = Player((32,32))
             curlev = 50;
             
-            loottable = {0:[]}
-            traptable = {0:[]}
-            enemytable = {0:[]}
+            loottable = {101:["loot"]}
+            traptable = {101:["trap"]}
+            enemytable = {101:["enemy"]}
             
             
             levellist = []
