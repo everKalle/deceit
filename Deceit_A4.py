@@ -6,7 +6,7 @@
 #        \/                 \/     \/
 #
 ##HELITUGEVUSED!  ...okei enamv2hem, mingi teip on veits vaiksem (5_...)
-##lisa mingi kuulatud teipide counter?
+##t6mba itemite spawn chanced veits maha, mingi 5% ?
 import os;
 import random;
 import pygame;
@@ -594,6 +594,13 @@ for i in range(7):
     cylinderimage[i].set_colorkey((0,128,0))
     print("loaded cylinder000"+str(i))
     
+tapeimage = []
+for i in range(10):
+    tapeimage.append(pygame.image.load(FLD_SPR+"tapecounter/tape"+str(i)+".bmp"))
+    tapeimage[i].set_colorkey((0,128,0))
+    tapeimage[i] = pygame.transform.scale(tapeimage[i],(330,44))
+    print("loaded tapecounter/tape"+str(i))
+    
 clock = pygame.time.Clock()
 imgnum = 1.5
         
@@ -901,6 +908,8 @@ while running:
         for i in range(ammo):
             screen.blit(hud_ammo_image,(110+32*i,6))
         screen.blit(cylinderimage[loadedammo],(6,6))
+        
+        screen.blit(tapeimage[tapes_listened],(12,428))
     
     if not explosion==None:
         screen.blit(explosion.image,cam.shift(explosion))
