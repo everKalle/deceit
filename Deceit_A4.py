@@ -1,12 +1,3 @@
-# _______          __                 
-# \      \   _____/  |_  ____   ______
-# /   |   \ /  _ \   __\/ __ \ /  ___/
-#/    |    (  <_> )  | \  ___/ \___ \ 
-#\____|__  /\____/|__|  \___  >____  >
-#        \/                 \/     \/
-#
-##HELITUGEVUSED!  ...okei enamv2hem, mingi teip on veits vaiksem (5_...)
-##t6mba itemite spawn chanced veits maha, mingi 5% ?
 import os;
 import random;
 import pygame;
@@ -89,10 +80,10 @@ def load_level(num,d):
             elif col=="I":
                 if not generated:
                     rnum=random.randint(0,100)
-                    if rnum<25:
+                    if rnum<23:
                         Ammunition((x,y));
                         table_add_entry(loottable,"Ammunition",x,y)
-                    elif rnum<45:           
+                    elif rnum<41:           
                         TriggerAudio((x,y));
                         table_add_entry(loottable,"TriggerAudio",x,y)
             elif col=="a":
